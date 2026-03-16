@@ -27,6 +27,16 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
     let mut last_vertical_gap = [0i16; SEQUENCE_COUNT];
     let mut last_diagonal_score = [0i16; SEQUENCE_COUNT];
 
+    // Transpose input sequences: seq becomes inner (contiguous) dimension
+    let mut seq1_t = [[0u8; SEQUENCE_COUNT]; SEQUENCE_SIZE];
+    let mut seq2_t = [[0u8; SEQUENCE_COUNT]; SEQUENCE_SIZE];
+    for seq in 0..SEQUENCE_COUNT {
+        for i in 0..SEQUENCE_SIZE {
+            seq1_t[i][seq] = sequences1[seq][i];
+            seq2_t[i][seq] = sequences2[seq][i];
+        }
+    }
+
     for seq in 0..SEQUENCE_COUNT {
         horizontal_gap_column[0][seq] = gap_open;
         last_vertical_gap[seq] = gap_open;
@@ -48,10 +58,8 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
 
         for row in 1..=SEQUENCE_SIZE {
             for seq in 0..SEQUENCE_COUNT {
-                let diag = sequences2[seq][col - 1];
-
                 // Compute next score from diagonal direction with match/mismatch.
-                let eq = (sequences1[seq][row - 1] == diag) as i16;
+                let eq = (seq1_t[row - 1][seq] == seq2_t[col - 1][seq]) as i16;
                 let diag_score = mismatch + eq * (match_score - mismatch);
                 let mut best_cell_score = last_diagonal_score[seq] + diag_score;
 
