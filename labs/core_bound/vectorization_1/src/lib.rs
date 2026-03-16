@@ -1,5 +1,3 @@
-use std::cmp::max;
-
 #[cfg(test)]
 mod tests;
 
@@ -90,9 +88,9 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
 //
 // Clang-12 compiler generates branches for std::max, which are often mispredicted
 // in this benchmark. That's the reason we provide branchless version of max function.
-//fn max(a: i16, b: i16) -> i16 {
-//    a ^ ((a ^ b) & ((a < b) as i16).wrapping_neg())
-//}
+fn max(a: i16, b: i16) -> i16 {
+    a ^ ((a ^ b) & ((a < b) as i16).wrapping_neg())
+}
 
 // Initialises a pair of sequence collections given a fixed sequence size.
 pub fn init() -> (Vec<Sequence>, Vec<Sequence>) {
