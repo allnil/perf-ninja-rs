@@ -51,16 +51,15 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
                 let diag = sequences2[seq][col - 1];
 
                 // Compute next score from diagonal direction with match/mismatch.
-                let mut best_cell_score = last_diagonal_score[seq]
-                    + (if sequences1[seq][row - 1] == diag {
-                        match_score
-                    } else {
-                        mismatch
-                    });
+                let eq = (sequences1[seq][row - 1] == diag) as i16;
+                let diag_score = mismatch + eq * (match_score - mismatch);
+                let mut best_cell_score = last_diagonal_score[seq] + diag_score;
+
                 // Determine best score from diagonal, vertical, or horizontal
                 // direction.
                 best_cell_score = max(best_cell_score, last_vertical_gap[seq]);
                 best_cell_score = max(best_cell_score, horizontal_gap_column[seq][row]);
+
                 // Cache next diagonal value and store optimum in score_column.
                 last_diagonal_score[seq] = score_column[seq][row];
                 score_column[seq][row] = best_cell_score;
@@ -68,6 +67,7 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
                 best_cell_score += gap_open;
                 last_vertical_gap[seq] += gap_extension;
                 horizontal_gap_column[seq][row] += gap_extension;
+
                 // Store optimum between gap open and gap extension.
                 last_vertical_gap[seq] = max(last_vertical_gap[seq], best_cell_score);
                 horizontal_gap_column[seq][row] =
