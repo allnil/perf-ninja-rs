@@ -14,80 +14,72 @@ pub type AlignResult = [i16; SEQUENCE_COUNT];
 pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> AlignResult {
     let mut result: AlignResult = [0; SEQUENCE_COUNT];
 
-    for sequence_idx in 0..sequences1.len() {
-        type Score = i16;
-        type Column = [Score; SEQUENCE_SIZE + 1];
+    type Score = i16;
+    type Column = [Score; SEQUENCE_SIZE + 1];
 
-        let sequence1: &Sequence = &sequences1[sequence_idx];
-        let sequence2: &Sequence = &sequences2[sequence_idx];
+    let gap_open: Score = -11;
+    let gap_extension: Score = -1;
+    let match_score: Score = 6; // previously 'match'
+    let mismatch: Score = -4;
 
-        /*
-         * Initialise score values.
-         */
-        let gap_open: Score = -11;
-        let gap_extension: Score = -1;
-        let match_score: Score = 6; // previously 'match'
-        let mismatch: Score = -4;
+    let mut score_column = [[0i16; SEQUENCE_SIZE + 1]; SEQUENCE_COUNT];
+    let mut horizontal_gap_column = [[0i16; SEQUENCE_SIZE + 1]; SEQUENCE_COUNT];
+    let mut last_vertical_gap = [0i16; SEQUENCE_COUNT];
+    let mut last_diagonal_score = [0i16; SEQUENCE_COUNT];
 
-        /*
-         * Setup the matrix.
-         * Note we can compute the entire matrix with just one column in memory,
-         * since we are only interested in the last value of the last column in the
-         * score matrix.
-         */
-        let mut score_column: Column = [0; SEQUENCE_SIZE + 1];
-        let mut horizontal_gap_column: Column = [0; SEQUENCE_SIZE + 1];
-        let mut last_vertical_gap: Score;
+    for seq in 0..SEQUENCE_COUNT {
+        horizontal_gap_column[seq][0] = gap_open;
+        last_vertical_gap[seq] = gap_open;
 
-        /*
-         * Initialise the first column of the matrix.
-         */
-        horizontal_gap_column[0] = gap_open;
-        last_vertical_gap = gap_open;
-
-        for i in 1..score_column.len() {
-            score_column[i] = last_vertical_gap;
-            horizontal_gap_column[i] = last_vertical_gap + gap_open;
-            last_vertical_gap += gap_extension;
+        for i in 1..=SEQUENCE_SIZE {
+            score_column[seq][i] = last_vertical_gap[seq];
+            horizontal_gap_column[seq][i] = last_vertical_gap[seq] + gap_open;
+            last_vertical_gap[seq] += gap_extension;
         }
+    }
 
-        /*
-         * Compute the main recursion to fill the matrix.
-         */
-        for col in 1..=sequence2.len() {
-            let mut last_diagonal_score: Score = score_column[0]; // Cache last diagonal score to compute this cell.
-            score_column[0] = horizontal_gap_column[0];
-            last_vertical_gap = horizontal_gap_column[0] + gap_open;
-            horizontal_gap_column[0] += gap_extension;
+    for seq in 0..SEQUENCE_COUNT {
+        for col in 1..=SEQUENCE_SIZE {
+            let mut last_diagonal_score: Score = score_column[seq][0]; // Cache last diagonal score to compute this cell.
 
-            let diag = sequence2[col - 1];
-            for row in 1..=sequence1.len() {
+            score_column[seq][0] = horizontal_gap_column[seq][0];
+
+            last_vertical_gap[seq] = horizontal_gap_column[seq][0] + gap_open;
+            horizontal_gap_column[seq][0] += gap_extension;
+
+            let diag = sequences2[seq][col - 1];
+            for row in 1..=SEQUENCE_SIZE {
                 // Compute next score from diagonal direction with match/mismatch.
                 let mut best_cell_score = last_diagonal_score
-                    + (if sequence1[row - 1] == diag {
+                    + (if sequences1[seq][row - 1] == diag {
                         match_score
                     } else {
                         mismatch
                     });
                 // Determine best score from diagonal, vertical, or horizontal
                 // direction.
-                best_cell_score = max(best_cell_score, last_vertical_gap);
-                best_cell_score = max(best_cell_score, horizontal_gap_column[row]);
+                best_cell_score = max(best_cell_score, last_vertical_gap[seq]);
+
+                best_cell_score = max(best_cell_score, horizontal_gap_column[seq][row]);
                 // Cache next diagonal value and store optimum in score_column.
-                last_diagonal_score = score_column[row];
-                score_column[row] = best_cell_score;
+                last_diagonal_score = score_column[seq][row];
+                score_column[seq][row] = best_cell_score;
                 // Compute the next values for vertical and horizontal gap.
                 best_cell_score += gap_open;
-                last_vertical_gap += gap_extension;
-                horizontal_gap_column[row] += gap_extension;
+                last_vertical_gap[seq] += gap_extension;
+                horizontal_gap_column[seq][row] += gap_extension;
                 // Store optimum between gap open and gap extension.
-                last_vertical_gap = max(last_vertical_gap, best_cell_score);
-                horizontal_gap_column[row] = max(horizontal_gap_column[row], best_cell_score);
+                last_vertical_gap[seq] = max(last_vertical_gap[seq], best_cell_score);
+                horizontal_gap_column[seq][row] =
+                    max(horizontal_gap_column[seq][row], best_cell_score);
             }
         }
+    }
 
-        // Report the best score.
-        result[sequence_idx] = *score_column.last().unwrap();
+    // Report the best score.
+
+    for seq in 0..SEQUENCE_COUNT {
+        result[seq] = score_column[seq][SEQUENCE_SIZE];
     }
 
     result
