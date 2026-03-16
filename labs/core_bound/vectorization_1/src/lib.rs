@@ -20,28 +20,28 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
     let match_score: Score = 6; // previously 'match'
     let mismatch: Score = -4;
 
-    let mut score_column = [[0i16; SEQUENCE_SIZE + 1]; SEQUENCE_COUNT];
-    let mut horizontal_gap_column = [[0i16; SEQUENCE_SIZE + 1]; SEQUENCE_COUNT];
+    let mut score_column = [[0i16; SEQUENCE_COUNT]; SEQUENCE_SIZE + 1];
+    let mut horizontal_gap_column = [[0i16; SEQUENCE_COUNT]; SEQUENCE_SIZE + 1];
     let mut last_vertical_gap = [0i16; SEQUENCE_COUNT];
     let mut last_diagonal_score = [0i16; SEQUENCE_COUNT];
 
     for seq in 0..SEQUENCE_COUNT {
-        horizontal_gap_column[seq][0] = gap_open;
+        horizontal_gap_column[0][seq] = gap_open;
         last_vertical_gap[seq] = gap_open;
 
         for i in 1..=SEQUENCE_SIZE {
-            score_column[seq][i] = last_vertical_gap[seq];
-            horizontal_gap_column[seq][i] = last_vertical_gap[seq] + gap_open;
+            score_column[i][seq] = last_vertical_gap[seq];
+            horizontal_gap_column[i][seq] = last_vertical_gap[seq] + gap_open;
             last_vertical_gap[seq] += gap_extension;
         }
     }
 
     for col in 1..=SEQUENCE_SIZE {
         for seq in 0..SEQUENCE_COUNT {
-            last_diagonal_score[seq] = score_column[seq][0];
-            score_column[seq][0] = horizontal_gap_column[seq][0];
-            last_vertical_gap[seq] = horizontal_gap_column[seq][0] + gap_open;
-            horizontal_gap_column[seq][0] += gap_extension;
+            last_diagonal_score[seq] = score_column[0][seq];
+            score_column[0][seq] = horizontal_gap_column[0][seq];
+            last_vertical_gap[seq] = horizontal_gap_column[0][seq] + gap_open;
+            horizontal_gap_column[0][seq] += gap_extension;
         }
 
         for row in 1..=SEQUENCE_SIZE {
@@ -56,20 +56,20 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
                 // Determine best score from diagonal, vertical, or horizontal
                 // direction.
                 best_cell_score = max(best_cell_score, last_vertical_gap[seq]);
-                best_cell_score = max(best_cell_score, horizontal_gap_column[seq][row]);
+                best_cell_score = max(best_cell_score, horizontal_gap_column[row][seq]);
 
                 // Cache next diagonal value and store optimum in score_column.
-                last_diagonal_score[seq] = score_column[seq][row];
-                score_column[seq][row] = best_cell_score;
+                last_diagonal_score[seq] = score_column[row][seq];
+                score_column[row][seq] = best_cell_score;
                 // Compute the next values for vertical and horizontal gap.
                 best_cell_score += gap_open;
                 last_vertical_gap[seq] += gap_extension;
-                horizontal_gap_column[seq][row] += gap_extension;
+                horizontal_gap_column[row][seq] += gap_extension;
 
                 // Store optimum between gap open and gap extension.
                 last_vertical_gap[seq] = max(last_vertical_gap[seq], best_cell_score);
-                horizontal_gap_column[seq][row] =
-                    max(horizontal_gap_column[seq][row], best_cell_score);
+                horizontal_gap_column[row][seq] =
+                    max(horizontal_gap_column[row][seq], best_cell_score);
             }
         }
     }
@@ -77,7 +77,7 @@ pub fn compute_alignment(sequences1: &[Sequence], sequences2: &[Sequence]) -> Al
     // Report the best score.
 
     for seq in 0..SEQUENCE_COUNT {
-        result[seq] = score_column[seq][SEQUENCE_SIZE];
+        result[seq] = score_column[SEQUENCE_SIZE][seq];
     }
 
     result
