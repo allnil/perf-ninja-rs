@@ -20,54 +20,95 @@ fn filter_vertically(
 ) {
     let rounding = 1 << (shift - 1);
 
-    for c in 0..width {
-        // Top part of line, partial kernel
-        for r in 0..min(radius, height) {
-            // Accumulation
-            let mut dot = 0;
-            let mut sum = 0;
-            let mut p = radius - r;
-            for y in 0..=min(r + radius, height - 1) {
-                let weight = kernel[p];
-                p += 1;
-                dot += input[y * width + c] as i32 * weight;
-                sum += weight;
-            }
+    /*
+    *
+    *       // Top part of line, partial kernel
+          for r in 0..min(radius, height) {
+              let mut dots = vec![0i32; width];
+              let mut sum = 0;
+              let mut p = radius - r;
 
-            // Normalization
-            // dot/sum fits in a u8, so f32 -> u8 is reasonable here
-            let value = dot as f32 / sum as f32 + 0.5;
-            output[r * width + c] = value as u8;
+              for y in 0..=min(r + radius, height - 1) {
+                  let weight = kernel[p];
+                  p += 1;
+                  let base = y * width;
+
+                  for c in 0..width {
+                      dots[c] += input[base + c] as i32 * weight;
+                  }
+
+                  sum += weight;
+              }
+
+              let out = r * width;
+              for c in 0..width {
+                  let value = dots[c] as f32 / sum as f32 + 0.5;
+                  output[out + c] = value as u8;
+              }
+          }
+    */
+    // Top part of line, partial kernel
+    for r in 0..min(radius, height) {
+        // Accumulation
+        let mut dots = vec![0; width];
+        let mut sum = 0;
+        let mut p = radius - r;
+        for y in 0..=min(r + radius, height - 1) {
+            let weight = kernel[p];
+            p += 1;
+            let base = y * width;
+
+            for c in 0..width {
+                dots[c] += input[base + c] as i32 * weight;
+            }
+            sum += weight;
         }
 
-        // Middle part of computations with full kernel
-        for r in radius..(height - radius) {
-            // Accumulation
-            let mut dot = 0;
-            for i in 0..(radius + 1 + radius) {
-                dot += input[(r - radius + i) * width + c] as i32 * kernel[i];
-            }
+        // Normalization
+        // dot/sum fits in a u8, so f32 -> u8 is reasonable here
+        let out = r * width;
+        for c in 0..width {
+            let value = dots[c] as f32 / sum as f32 + 0.5;
+            output[out + c] = value as u8;
+        }
+    }
 
-            // Fast shift instead of division
-            let value: i32 = (dot + rounding) >> shift;
-            output[r * width + c] = value as u8;
+    // Middle part of computations with full kernel
+    for r in radius..(height - radius) {
+        // Accumulation
+        let mut dots = vec![0; width];
+        for i in 0..(radius + 1 + radius) {
+            let base = (r - radius + i) * width;
+            for c in 0..width {
+                dots[c] += input[base + c] as i32 * kernel[i];
+            }
         }
 
-        // Bottom part of line, partial kernel
-        for r in std::cmp::max(radius, height - radius)..height {
-            // Accumulation
-            let mut dot = 0;
-            let mut sum = 0;
-            let mut p = 0;
-            for y in (r - radius)..height {
-                let weight = kernel[p];
-                p += 1;
-                dot += input[y * width + c] as i32 * weight;
-                sum += weight;
-            }
+        // Fast shift instead of division
+        for c in 0..width {
+            let value: i32 = (dots[c] + rounding) >> shift;
+            output[r * width + c] = value as u8;
+        }
+    }
 
-            // Normalization
-            let value = dot as f32 / sum as f32 + 0.5;
+    // Bottom part of line, partial kernel
+    for r in std::cmp::max(radius, height - radius)..height {
+        // Accumulation
+        let mut dots = vec![0; width];
+        let mut sum = 0;
+        let mut p = 0;
+        for y in (r - radius)..height {
+            let weight = kernel[p];
+            p += 1;
+            for c in 0..width {
+                dots[c] += input[y * width + c] as i32 * weight;
+            }
+            sum += weight;
+        }
+
+        // Normalization
+        for c in 0..width {
+            let value = dots[c] as f32 / sum as f32 + 0.5;
             output[r * width + c] = value as u8;
         }
     }
