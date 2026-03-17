@@ -12,17 +12,17 @@ pub use init::{create_entry, init};
 
 // Assume those constants never change
 pub const N: usize = 10_000;
-pub const MIN_RANDOM: i32 = 0;
-pub const MAX_RANDOM: i32 = 100;
+pub const MIN_RANDOM: i8 = 0;
+pub const MAX_RANDOM: i8 = 100;
 
 // FIXME: this data structure can be reduced in size
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct S {
-    pub i: i32,
-    pub l: i64,
-    pub s: i16,
-    pub d: f64,
+    pub d: f32,
+    pub l: i16,
+    pub i: i8,
+    pub s: i8,
     pub b: bool,
 }
 

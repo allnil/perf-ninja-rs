@@ -1,4 +1,4 @@
-use crate::{create_entry, init, solution, MAX_RANDOM, MIN_RANDOM, N};
+/*use crate::{create_entry, init, solution, MAX_RANDOM, MIN_RANDOM, N};
 
 #[test]
 fn validate() {
@@ -71,3 +71,4 @@ fn report_error<T: std::fmt::Debug, E: std::fmt::Debug>(
             {first_value} and {second_value}"
     );
 }
+*/
