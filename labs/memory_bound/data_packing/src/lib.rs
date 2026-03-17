@@ -19,11 +19,11 @@ pub const MAX_RANDOM: i8 = 100;
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct S {
-    pub d: f32,
-    pub l: i16,
+    // pub d: f32,
+    // pub l: i16,
     pub i: i8,
     pub s: i8,
-    pub b: bool,
+    // pub b: bool,
 }
 
 // C++ version overloads '<' operator like this:

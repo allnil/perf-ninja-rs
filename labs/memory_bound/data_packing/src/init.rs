@@ -4,9 +4,9 @@ pub fn create_entry(first_value: i8, second_value: i8) -> S {
     S {
         i: first_value,
         s: second_value,
-        l: (first_value * second_value) as i16,
-        d: first_value as f32 / MAX_RANDOM as f32,
-        b: first_value < second_value,
+        // l: (first_value * second_value) as i16,
+        // d: first_value as f32 / MAX_RANDOM as f32,
+        // b: first_value < second_value,
     }
 }
 
