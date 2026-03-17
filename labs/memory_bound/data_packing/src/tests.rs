@@ -1,4 +1,4 @@
-/*use crate::{create_entry, init, solution, MAX_RANDOM, MIN_RANDOM, N};
+use crate::{create_entry, init, solution, MAX_RANDOM, MIN_RANDOM, N};
 
 #[test]
 fn validate() {
@@ -22,7 +22,7 @@ fn validate() {
     assert!(checks_passed);
 }
 
-fn check_entry(first: i32, second: i32) -> bool {
+fn check_entry(first: i8, second: i8) -> bool {
     let entry = create_entry(first, second);
 
     let mut is_valid = true;
@@ -32,18 +32,18 @@ fn check_entry(first: i32, second: i32) -> bool {
         is_valid = false;
     }
 
-    if entry.s != second as i16 {
+    if entry.s != second {
         report_error("s", entry.s, second, first, second);
         is_valid = false;
     }
 
-    let expected_l = (first * second) as i64;
+    let expected_l = (first as i16) * (second as i16);
     if entry.l != expected_l {
         report_error("l", entry.l, expected_l, first, second);
         is_valid = false;
     }
 
-    let expected_d = first as f64 / MAX_RANDOM as f64;
+    let expected_d = first as f32 / MAX_RANDOM as f32;
     if (entry.d - expected_d).abs() > 0.001 {
         report_error("d", entry.d, expected_d, first, second);
         is_valid = false;
@@ -62,8 +62,8 @@ fn report_error<T: std::fmt::Debug, E: std::fmt::Debug>(
     var_name: &str,
     received: T,
     expected: E,
-    first_value: i32,
-    second_value: i32,
+    first_value: i8,
+    second_value: i8,
 ) {
     eprintln!(
         "Validation Failed. Value {var_name} is {received:?}
@@ -71,4 +71,3 @@ fn report_error<T: std::fmt::Debug, E: std::fmt::Debug>(
             {first_value} and {second_value}"
     );
 }
-*/
